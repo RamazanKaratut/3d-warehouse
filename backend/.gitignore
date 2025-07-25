@@ -1,0 +1,22 @@
+# Python cache dosyaları
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Sanal ortamlar
+venv/
+env/
+
+# Ortam değişkenleri ve hassas dosyalar
+.env
+*.env
+*.sqlite3
+*.log
+
+# IDE ve sistem dosyaları
+.vscode/
+.idea/
+.DS_Store
+
+database_baglanti.py
