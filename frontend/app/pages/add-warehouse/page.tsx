@@ -89,7 +89,6 @@ export default function AddWarehouse() {
     }
   }, [warehouseWidth, warehouseLength]);
 
-  // Manuel yöntem seçiliyse veya boyutlar değişirse alanı yeniden hesapla
   React.useEffect(() => {
     if (addMethod === 'manual') {
       calculateManualArea();
