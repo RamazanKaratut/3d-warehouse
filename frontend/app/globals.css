@@ -1,3 +1,5 @@
+/* src/app/globals.css (veya app/globals.css) */
+
 @import "tailwindcss";
 
 :root {
@@ -14,13 +16,15 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #ffffff;
     --foreground: #ededed;
   }
 }
 
 body {
+  height: 100; /* Veya 100% - test edeceğiz */
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  color:#171717;
 }

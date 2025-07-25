@@ -3,11 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link'; // Eğer kullanılıyorsa kalsın, kullanılmıyorsa kaldırılabilir
-
-// Yeni oluşturduğumuz bileşenleri import ediyoruz
-import CurrentWarehouses from '@/app/components/dashboard/CurrentWarehouses';
-import AddWarehouse from '@/app/components/dashboard/AddWarehouse';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const [message, setMessage] = useState<string>('');
@@ -20,7 +16,10 @@ export default function DashboardPage() {
       try {
         const response = await fetch(`${API_URL}/protected`, {
           method: 'GET',
-          credentials: 'include', // Çerezleri göndermeyi unutmayın
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
         });
 
         const data = await response.json();
@@ -28,15 +27,14 @@ export default function DashboardPage() {
         if (response.ok) {
           setMessage(data.message);
         } else {
-          setMessage(data.message || 'Veri çekilemedi.');
-          if (response.status === 401) {
-            // Yetkilendirme yoksa ana sayfaya (giriş) yönlendir
-            setTimeout(() => router.push('/'), 1500);
-          }
+          // Token geçersizse veya süresi dolduysa login sayfasına yönlendir
+          setMessage(data.message || 'Korumalı kaynağa erişim başarısız.');
+          router.push('/'); // <-- BURADA LOGIN SAYFASINA YÖNLENDİRME YAPIYORSUNUZ
         }
       } catch (error) {
         console.error('Korumalı kaynak isteği sırasında hata:', error);
         setMessage('Ağ hatası oluştu. Lütfen daha sonra tekrar deneyin.');
+        router.push('/'); // <-- BURADA DA YÖNLENDİRME YAPIYORSUNUZ
       }
     };
 
@@ -81,10 +79,25 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* Depo kartları */}
-      <div className="w-full max-w-5xl flex flex-col gap-6">
-        <CurrentWarehouses />
-        <AddWarehouse />
+      {/* Yeni navigasyon kartları */}
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        {/* Depo Ekle Kartı */}
+        <Link href="/pages/add-warehouse" passHref>
+          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out cursor-pointer flex flex-col items-center justify-center text-center h-48 border border-blue-200 hover:border-blue-400">
+            <span className="text-6xl mb-4" role="img" aria-label="add warehouse">➕📦</span>
+            <h3 className="text-2xl font-semibold text-gray-800">Yeni Depo Ekle</h3>
+            <p className="text-gray-500 mt-2">Harita üzerinde alan belirleyerek yeni bir depo kaydedin.</p>
+          </div>
+        </Link>
+
+        {/* Depolarım Kartı */}
+        <Link href="/pages/my-warehouses" passHref>
+          <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out cursor-pointer flex flex-col items-center justify-center text-center h-48 border border-green-200 hover:border-green-400">
+            <span className="text-6xl mb-4" role="img" aria-label="my warehouses">📊📦</span>
+            <h3 className="text-2xl font-semibold text-gray-800">Depolarım</h3>
+            <p className="text-gray-500 mt-2">Tüm mevcut depolarınızı görüntüleyin ve yönetin.</p>
+          </div>
+        </Link>
       </div>
     </div>
   );

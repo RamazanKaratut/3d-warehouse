@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
         </p>
         <form onSubmit={handleSubmit} className="space-y-6"> {/* Boşluk artırıldı */}
           <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-1">
               E-posta:
             </label>
             <input
@@ -61,8 +61,8 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              // Stil güncellendi
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+              // Stil güncellendi ve text-gray-900 eklendi
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out text-gray-900"
             />
           </div>
           <div>
@@ -79,9 +79,8 @@ export default function ForgotPasswordPage() {
         {message && (
           // motion.div yerine normal div kullanıldı, stil güncellendi
           <div
-            className={`mt-6 p-3 rounded-md text-center text-sm font-medium ${
-              message.includes('gönderildi') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'
-            }`}
+            className={`mt-6 p-3 rounded-md text-center text-sm font-medium ${message.includes('gönderildi') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'
+              }`}
           >
             {message}
           </div>

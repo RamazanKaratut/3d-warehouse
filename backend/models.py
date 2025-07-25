@@ -24,3 +24,31 @@ class User(db.Model):
         from .extensions import bcrypt
         # bcrypt ile hash'lenmiş şifreyi yeni 'password' sütunundan kontrol ediyoruz
         return bcrypt.check_password_hash(self.password, plain_password)
+
+class Warehouse(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(200), nullable=False)
+    capacity = db.Column(db.Integer, nullable=False)
+    area_m2 = db.Column(db.Float, nullable=False)
+    description = db.Column(db.Text)
+    geo_json = db.Column(db.JSON) # GeoJSON verisi için JSON tipi
+    type = db.Column(db.String(10), nullable=False) # 'open' veya 'closed'
+    height_m = db.Column(db.Float, nullable=True) # Sadece kapalı depolar için
+
+    # Kullanıcı ile ilişki
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "location": self.location,
+            "capacity": self.capacity,
+            "area_m2": self.area_m2,
+            "description": self.description,
+            "geo_json": self.geo_json,
+            "type": self.type,
+            "height_m": self.height_m,
+            "user_id": self.user_id
+        }

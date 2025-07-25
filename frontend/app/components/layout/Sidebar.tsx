@@ -10,9 +10,9 @@ export default function Sidebar() {
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
-    { name: 'Depo Ekle', href: '/dashboard/add-warehouse' },
-    { name: 'Depo Listele', href: '/dashboard/list-warehouses' },
-    { name: '3D Depo Yönetimi', href: '/dashboard/warehouse-3d-management' }, // Bu satırı ekleyin
+    { name: 'Depo Ekle', href: '/pages/add-warehouse' },
+    { name: 'Depo Listele', href: '/pages/my-warehouses' },
+    { name: '3D Depo Yönetimi', href: '/pages/warehouse-3d-management' }, // Bu satırı ekleyin
   ];
 
   return (

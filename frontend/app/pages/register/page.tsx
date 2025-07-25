@@ -43,11 +43,9 @@ export default function RegisterPage() {
   };
 
   return (
-    // motion.div yerine normal div kullanıldı
     <div
       className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-4 sm:p-6 lg:p-8"
     >
-      {/* motion.div yerine normal div kullanıldı */}
       <div
         className="bg-white p-8 sm:p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200"
       >
@@ -55,9 +53,8 @@ export default function RegisterPage() {
           Kaydol
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* motion.div'ler kaldırıldı */}
           <div>
-            <label htmlFor="regUsername" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="regUsername" className="block text-sm font-semibold text-gray-900 mb-1"> {/* text-gray-900 yapıldı */}
               Kullanıcı Adı:
             </label>
             <input
@@ -66,11 +63,11 @@ export default function RegisterPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out text-gray-900" // text-gray-900 eklendi
             />
           </div>
           <div>
-            <label htmlFor="regEmail" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="regEmail" className="block text-sm font-semibold text-gray-900 mb-1"> {/* text-gray-900 yapıldı */}
               E-posta:
             </label>
             <input
@@ -79,11 +76,11 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out text-gray-900" // text-gray-900 eklendi
             />
           </div>
           <div>
-            <label htmlFor="regPassword" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label htmlFor="regPassword" className="block text-sm font-semibold text-gray-900 mb-1"> {/* text-gray-900 yapıldı */}
               Şifre:
             </label>
             <input
@@ -92,7 +89,7 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out text-gray-900" // text-gray-900 eklendi
             />
           </div>
           <div>
@@ -106,7 +103,6 @@ export default function RegisterPage() {
         </form>
 
         {message && (
-          // motion.div yerine normal div kullanıldı
           <div
             className={`mt-6 p-3 rounded-md text-center text-sm font-medium ${
               message.includes('başarıyla kaydedildi') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'
@@ -117,7 +113,7 @@ export default function RegisterPage() {
         )}
 
         <div className="mt-8 text-center">
-          <p className="text-base text-gray-700">
+          <p className="text-base text-gray-900"> {/* text-gray-900 yapıldı */}
             Zaten bir hesabınız var mı?{' '}
             <Link href="/" className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
               Giriş Yapın
