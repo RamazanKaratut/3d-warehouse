@@ -6,10 +6,9 @@ import os
 class Config:
     # Veritabanı Ayarları
     
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Güvenlik Ayarları
-    # BURAYI ÇOK GÜÇLÜ VE RASTGELE BİR ANAHTAR İLE DEĞİŞTİRİN!
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'bfe2a1c0d5e8f4a7b9c3d6e0f1a2b3c4d5e8f4a7b9c3d6e0f1a2b3c4'
     # itsdangerous için ek bir salt (tuz)
     SECURITY_PASSWORD_SALT = os.environ.get('SECURITY_PASSWORD_SALT') or 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6'

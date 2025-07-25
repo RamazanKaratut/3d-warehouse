@@ -1,110 +1,254 @@
 // src/app/dashboard/warehouse-3d-management/page.tsx
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion, Transition } from 'framer-motion';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, Html } from '@react-three/drei';
-import WarehouseScene from '@/app/components/dashboard/WarehouseScene';
 
-export default function Warehouse3DManagementPage() {
+export default function WarehouseRegistrationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [warehouseId, setWarehouseId] = useState<string | null>(null);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+  // URL'den gelen warehouseId'yi alıyoruz, belki bir üst depo ID'si olabilir
+  // veya sadece sayfa yüklemesi için bir referans olabilir.
+  // Bu sayfada 3D modelleme olmayacağı için direkt depo kaydına odaklanacağız.
+  const [parentWarehouseId, setParentWarehouseId] = useState<string | null>(null);
+
+  // Form için state'ler
+  const [depoAdi, setDepoAdi] = useState<string>('');
+  const [depoKonumu, setDepoKonumu] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Opsiyonel: Depo boyutları gibi ek alanlar ekleyebiliriz
+  const [genislik, setGenislik] = useState<string>(''); // Metre cinsinden
+  const [derinlik, setDerinlik] = useState<string>(''); // Metre cinsinden
+  const [yukseklik, setYukseklik] = useState<string>(''); // Metre cinsinden
+
+  // Backend API adresi (örnek olarak)
+  const API_URL = 'http://localhost:5000/api/warehouses'; // Kendi API adresinizle değiştirin
 
   useEffect(() => {
     const id = searchParams.get('id');
     if (id) {
-      setWarehouseId(id);
+      setParentWarehouseId(id);
+      // Eğer bu sayfa belirli bir ana depo altına yeni depo kaydediyorsa,
+      // bu ID'yi kullanabiliriz. Şu an sadece gösterim amaçlı.
     }
-    setInitialLoadComplete(true);
   }, [searchParams]);
 
-  const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    in: { opacity: 1, y: 0 },
-    out: { opacity: 0, y: -20 },
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+    setLoading(true);
 
-  const pageTransition: Transition = {
-    type: 'tween',
-    ease: 'anticipate',
-    duration: 0.5,
+    // Form validasyonu
+    if (!depoAdi.trim() || !depoKonumu.trim()) {
+      setMessage('Lütfen depo adı ve konumu alanlarını doldurun.');
+      setLoading(false);
+      return;
+    }
+
+    // Boyutlar için sayısal kontrol
+    const parsedGenislik = parseFloat(genislik);
+    const parsedDerinlik = parseFloat(derinlik);
+    const parsedYukseklik = parseFloat(yukseklik);
+
+    if (genislik && (isNaN(parsedGenislik) || parsedGenislik <= 0)) {
+      setMessage('Genişlik geçerli bir sayı olmalıdır.');
+      setLoading(false);
+      return;
+    }
+    if (derinlik && (isNaN(parsedDerinlik) || parsedDerinlik <= 0)) {
+      setMessage('Derinlik geçerli bir sayı olmalıdır.');
+      setLoading(false);
+      return;
+    }
+    if (yukseklik && (isNaN(parsedYukseklik) || parsedYukseklik <= 0)) {
+      setMessage('Yükseklik geçerli bir sayı olmalıdır.');
+      setLoading(false);
+      return;
+    }
+
+
+    try {
+      // Backend'e gönderilecek veri objesi
+      const depoData = {
+        name: depoAdi,
+        location: depoKonumu,
+        parentWarehouseId: parentWarehouseId, // Eğer varsa, üst depo ID'si
+        dimensions: {
+          width: parsedGenislik || null,
+          depth: parsedDerinlik || null,
+          height: parsedYukseklik || null,
+        },
+        // İhtiyaç duyabileceğiniz diğer veriler
+        // type: 'ana_depo', // Veya 'alt_depo', 'alan'
+        // capacity: '1000m3',
+      };
+
+      console.log('Depo kaydı gönderiliyor:', depoData);
+
+      // Backend API çağrısı
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${yourAuthToken}`, // Eğer kimlik doğrulama gerekiyorsa
+        },
+        body: JSON.stringify(depoData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage(`Depo "${depoAdi}" başarıyla kaydedildi: ${data.message || ''}`);
+        // Formu temizle
+        setDepoAdi('');
+        setDepoKonumu('');
+        setGenislik('');
+        setDerinlik('');
+        setYukseklik('');
+        // Belki kullanıcıyı başka bir sayfaya yönlendirebiliriz
+        // router.push('/dashboard/warehouses');
+      } else {
+        setMessage(data.message || 'Depo kaydı başarısız oldu.');
+      }
+    } catch (error) {
+      console.error('Depo kaydı sırasında hata:', error);
+      setMessage('Ağ hatası oluştu veya sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <motion.div
-      initial="initial"
-      animate="in"
-      exit="out"
-      variants={pageVariants}
-      transition={pageTransition}
-      className="flex flex-col items-center justify-center bg-gray-100 p-8 min-h-screen"
-    >
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-6xl text-center">
-        <h2 className="text-3xl font-bold mb-4 text-gray-800">3 Boyutlu Depo Yönetimi</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-8">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center border border-gray-200">
+        <h2 className="text-4xl font-extrabold mb-8 text-gray-900 leading-tight">
+          Yeni Depo Kaydı
+        </h2>
 
-        {!initialLoadComplete ? (
-          <div className="flex flex-col items-center justify-center h-64">
-            <svg className="animate-spin -ml-1 mr-3 h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p className="mt-4 text-lg text-gray-700">Depo bilgileri yükleniyor...</p>
+        {parentWarehouseId && (
+          <p className="text-lg text-gray-700 mb-6">
+            <strong className="text-indigo-600">Üst Depo ID:</strong> {parentWarehouseId}
+            <br />
+            (Bu depo altına kayıt yapılıyor olabilir.)
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="depoAdi" className="block text-sm font-semibold text-gray-700 mb-1 text-left">
+              Depo Adı:
+            </label>
+            <input
+              type="text"
+              id="depoAdi"
+              value={depoAdi}
+              onChange={(e) => setDepoAdi(e.target.value)}
+              placeholder="Örn: Kayseri Merkez Depo"
+              required
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+            />
           </div>
-        ) : warehouseId ? (
-          <>
-            <p className="text-lg text-gray-700 mb-6">
-              <strong>Depo ID:</strong> <span className="font-semibold text-blue-600">{warehouseId}</span>
-            </p>
 
-            <div className="w-full h-[600px] bg-gray-200 rounded-lg overflow-hidden mb-6 relative border border-gray-300">
-              <Canvas camera={{ position: [0, 0, 20], fov: 75 }} shadows>
-                <ambientLight intensity={0.4} />
-                <pointLight position={[10, 10, 10]} intensity={0.8} />
-                <Suspense fallback={
-                  <Html center>
-                    <div className="text-lg text-gray-700 bg-white p-2 rounded-md shadow-md">
-                      3D Model Yükleniyor...
-                      <svg className="animate-spin mx-auto mt-2 h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  </Html>
-                }>
-                  <WarehouseScene warehouseId={warehouseId} />
-                </Suspense>
-                <OrbitControls enableZoom enablePan enableRotate />
-                <Environment preset="city" />
-              </Canvas>
-              <div className="absolute bottom-4 left-4 right-4 text-xs text-gray-600 bg-white bg-opacity-75 p-2 rounded-md">
-                <strong>Kullanım:</strong> Fare sol tuş ile döndür, sağ tuş ile kaydır, tekerlek ile yakınlaştır/uzaklaştır.
-              </div>
+          <div>
+            <label htmlFor="depoKonumu" className="block text-sm font-semibold text-gray-700 mb-1 text-left">
+              Depo Konumu:
+            </label>
+            <input
+              type="text"
+              id="depoKonumu"
+              value={depoKonumu}
+              onChange={(e) => setDepoKonumu(e.target.value)}
+              placeholder="Örn: Kayseri Organize Sanayi"
+              required
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+            />
+          </div>
+
+          {/* Opsiyonel: Boyutlar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="genislik" className="block text-sm font-semibold text-gray-700 mb-1 text-left">
+                Genişlik (m):
+              </label>
+              <input
+                type="number"
+                id="genislik"
+                value={genislik}
+                onChange={(e) => setGenislik(e.target.value)}
+                placeholder="Örn: 10"
+                step="0.01"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+              />
             </div>
+            <div>
+              <label htmlFor="derinlik" className="block text-sm font-semibold text-gray-700 mb-1 text-left">
+                Derinlik (m):
+              </label>
+              <input
+                type="number"
+                id="derinlik"
+                value={derinlik}
+                onChange={(e) => setDerinlik(e.target.value)}
+                placeholder="Örn: 20"
+                step="0.01"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+              />
+            </div>
+            <div>
+              <label htmlFor="yukseklik" className="block text-sm font-semibold text-gray-700 mb-1 text-left">
+                Yükseklik (m):
+              </label>
+              <input
+                type="number"
+                id="yukseklik"
+                value={yukseklik}
+                onChange={(e) => setYukseklik(e.target.value)}
+                placeholder="Örn: 5"
+                step="0.01"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
+              />
+            </div>
+          </div>
 
-            <p className="text-gray-600 mb-6">
-              Bu sahnede konteyner ekleme, taşıma ve silme işlemlerini interaktif olarak gerçekleştirebilirsiniz.
-            </p>
-          </>
-        ) : (
-          <div className="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md">
-            <p className="font-bold">Uyarı:</p>
-            <p>Lütfen yönetmek istediğiniz depoyu seçin. Dashboard'dan bir depo ID'si ile bu sayfaya yönlenmelisiniz.</p>
-            <p className="text-sm mt-2">Örnek URL: <code className="bg-gray-200 p-1 rounded">/dashboard/warehouse-3d-management?id=DEPO001</code></p>
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                'Depoyu Kaydet'
+              )}
+            </button>
+          </div>
+        </form>
+
+        {message && (
+          <div className={`mt-6 p-4 rounded-md text-center text-sm font-medium ${
+            message.includes('başarıyla kaydedildi') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'
+          }`}>
+            {message}
           </div>
         )}
 
-        <Link
-          href="/dashboard"
-          className="inline-block mt-6 py-2 px-6 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150"
-        >
-          Dashboard'a Geri Dön
-        </Link>
+        <div className="mt-8 text-center">
+          <Link
+            href="/dashboard"
+            className="inline-block py-2 px-6 border border-transparent rounded-md shadow-sm text-base font-medium text-blue-600 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150"
+          >
+            Dashboard'a Geri Dön
+          </Link>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
