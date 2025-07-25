@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion, Transition } from 'framer-motion';
+// Framer Motion artık import edilmiyor
 
 export default function LoginPage() {
   const [username, setUsername] = useState<string>('');
@@ -16,12 +16,9 @@ export default function LoginPage() {
   const API_URL = 'http://localhost:5000/auth'; // Backend adresiniz
 
   useEffect(() => {
-    // "Beni Hatırla" bilgisi varsa localStorage'dan çek
     const storedUsername = localStorage.getItem('rememberedUsername');
-    const storedPassword = localStorage.getItem('rememberedPassword'); // Güvenlik uyarısını unutmayın!
-    if (storedUsername && storedPassword) {
+    if (storedUsername) {
       setUsername(storedUsername);
-      setPassword(storedPassword);
       setRememberMe(true);
     }
   }, []);
@@ -44,58 +41,39 @@ export default function LoginPage() {
 
       if (response.ok) {
         setMessage(data.message);
-        // "Beni Hatırla" seçiliyse bilgileri localStorage'a kaydet
         if (rememberMe) {
           localStorage.setItem('rememberedUsername', username);
-          localStorage.setItem('rememberedPassword', password); // Güvenlik uyarısı!
         } else {
-          // Seçili değilse veya giriş başarısız olursa temizle
           localStorage.removeItem('rememberedUsername');
-          localStorage.removeItem('rememberedPassword');
         }
-        router.push('/pages/dashboard'); // Doğru yönlendirme
+        router.push('/pages/dashboard');
       } else {
         setMessage(data.message || 'Giriş başarısız oldu.');
-        // Giriş başarısız olursa "beni hatırla" bilgilerini temizle
         localStorage.removeItem('rememberedUsername');
-        localStorage.removeItem('rememberedPassword');
       }
     } catch (error) {
       console.error('Giriş isteği sırasında hata:', error);
       setMessage('Ağ hatası oluştu. Lütfen daha sonra tekrar deneyin.');
-      // Ağ hatasında da "beni hatırla" bilgilerini temizle
       localStorage.removeItem('rememberedUsername');
-      localStorage.removeItem('rememberedPassword');
     }
   };
 
-  // Animasyon varyantları
-  const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    in: { opacity: 1, y: 0 },
-    out: { opacity: 0, y: -20 },
-  };
-
-  const pageTransition: Transition = {
-    type: 'tween',
-    ease: 'anticipate',
-    duration: 0.5,
-  };
-
   return (
-    <motion.div
-      initial="initial"
-      animate="in"
-      exit="out"
-      variants={pageVariants}
-      transition={pageTransition}
-      className="min-h-screen flex items-center justify-center bg-gray-100"
+    // motion.div yerine normal div kullanıldı
+    <div
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-4 sm:p-6 lg:p-8"
     >
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Giriş Yap</h2>
-        <form onSubmit={handleSubmit} className="space-y-5">
+      {/* motion.div yerine normal div kullanıldı */}
+      <div
+        className="bg-white p-8 sm:p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200"
+      >
+        <h2 className="text-4xl font-extrabold text-center mb-8 text-gray-900 leading-tight">
+          Giriş Yap
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* motion.div'ler kaldırıldı */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-1">
               Kullanıcı Adı:
             </label>
             <input
@@ -104,11 +82,11 @@ export default function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-1">
               Şifre:
             </label>
             <input
@@ -117,33 +95,35 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
             />
           </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Beni Hatırla
-              </label>
-            </div>
-            <div className="text-sm">
-              <Link href="/pages/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                Şifremi Unuttum?
-              </Link>
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                  Beni Hatırla
+                </label>
+              </div>
+              <div className="text-sm">
+                <Link href="/pages/forgot-password" className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
+                  Şifremi Unuttum?
+                </Link>
+              </div>
             </div>
           </div>
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5"
             >
               Giriş Yap
             </button>
@@ -151,20 +131,25 @@ export default function LoginPage() {
         </form>
 
         {message && (
-          <p className={`mt-4 text-center ${message.includes('başarılı') ? 'text-green-600' : 'text-red-600'}`}>
+          // motion.div yerine normal div kullanıldı
+          <div
+            className={`mt-6 p-3 rounded-md text-center text-sm font-medium ${
+              message.includes('başarılı') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'
+            }`}
+          >
             {message}
-          </p>
+          </div>
         )}
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+        <div className="mt-8 text-center">
+          <p className="text-base text-gray-700">
             Hesabınız yok mu?{' '}
-            <Link href="/pages/register" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/pages/register" className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
               Kaydolun
             </Link>
           </p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

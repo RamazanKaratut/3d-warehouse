@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion, Transition } from 'framer-motion';
+// Framer Motion artık import edilmiyor
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState<string>('');
@@ -37,36 +37,22 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  // Animasyon varyantları
-  const pageVariants = {
-    initial: { opacity: 0, scale: 0.9 },
-    in: { opacity: 1, scale: 1 },
-    out: { opacity: 0, scale: 0.9 },
-  };
-
-  const pageTransition: Transition = {
-    type: 'tween',
-    ease: 'anticipate',
-    duration: 0.5,
-  };
-
   return (
-    <motion.div
-      initial="initial"
-      animate="in"
-      exit="out"
-      variants={pageVariants}
-      transition={pageTransition}
-      className="min-h-screen flex items-center justify-center bg-gray-100"
+    // motion.div yerine normal div kullanıldı
+    <div
+      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-4 sm:p-6 lg:p-8"
     >
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Şifremi Unuttum</h2>
-        <p className="text-center text-gray-600 mb-5">
+      {/* motion.div yerine normal div kullanıldı */}
+      <div className="bg-white p-8 sm:p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200">
+        <h2 className="text-4xl font-extrabold text-center mb-8 text-gray-900 leading-tight">
+          Şifremi Unuttum
+        </h2>
+        <p className="text-center text-gray-700 mb-6 text-base"> {/* Stil güncellendi */}
           Şifrenizi sıfırlamak için e-posta adresinizi girin.
         </p>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6"> {/* Boşluk artırıldı */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1">
               E-posta:
             </label>
             <input
@@ -75,13 +61,15 @@ export default function ForgotPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              // Stil güncellendi
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base transition-all duration-200 ease-in-out"
             />
           </div>
           <div>
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              // Stil güncellendi (gradient, shadow, hover efekti)
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-300 ease-in-out transform hover:-translate-y-0.5"
             >
               Şifre Sıfırlama Linki Gönder
             </button>
@@ -89,20 +77,25 @@ export default function ForgotPasswordPage() {
         </form>
 
         {message && (
-          <p className={`mt-4 text-center ${message.includes('gönderildi') ? 'text-green-600' : 'text-red-600'}`}>
+          // motion.div yerine normal div kullanıldı, stil güncellendi
+          <div
+            className={`mt-6 p-3 rounded-md text-center text-sm font-medium ${
+              message.includes('gönderildi') ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-red-100 text-red-700 border border-red-300'
+            }`}
+          >
             {message}
-          </p>
+          </div>
         )}
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
+        <div className="mt-8 text-center"> {/* Boşluk artırıldı */}
+          <p className="text-base text-gray-700"> {/* Stil güncellendi */}
             Giriş sayfasına geri dön{' '}
-            <Link href="/" className="font-medium text-blue-600 hover:text-blue-500">
+            <Link href="/" className="font-semibold text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
               Giriş Yap
             </Link>
           </p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

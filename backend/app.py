@@ -34,7 +34,6 @@ def create_app():
     # BURADA auth_bp'nin nasıl kaydedildiğini kontrol edin!
     app.register_blueprint(auth_bp, url_prefix='/auth') # Örnek: auth_bp için /auth öneki
 
-
     # Debug modunda tablo oluşturma (sadece geliştirme için)
     with app.app_context():
         # Eğer alembic (flask migrate) kullanıyorsanız, db.create_all() yerine migrate komutlarını kullanın

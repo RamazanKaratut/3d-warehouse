@@ -3,8 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { motion, AnimatePresence, Transition } from 'framer-motion'; // Transition'ı da eklemeyi unutmayın
+import Link from 'next/link'; // Eğer kullanılıyorsa kalsın, kullanılmıyorsa kaldırılabilir
 
 // Yeni oluşturduğumuz bileşenleri import ediyoruz
 import CurrentWarehouses from '@/app/components/dashboard/CurrentWarehouses';
@@ -68,46 +67,25 @@ export default function DashboardPage() {
     }
   };
 
-  // Animasyon varyantları
-  const pageVariants = {
-    initial: { opacity: 0, y: 20 },
-    in: { opacity: 1, y: 0 },
-    out: { opacity: 0, y: -20 },
-  };
+  return (
+    <div className="min-h-screen flex flex-col items-center bg-gray-100 p-6 md:p-10">
+      {/* Başlık ve çıkış butonu */}
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg w-full max-w-5xl text-center mb-6">
+        <h2 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">Yönetim Paneli</h2>
+        {message && <p className="text-gray-700 mb-4">{message}</p>}
+        <button
+          onClick={handleLogout}
+          className="py-2 px-5 rounded-xl text-white bg-red-600 hover:bg-red-700 transition duration-200 text-base md:text-lg"
+        >
+          Çıkış Yap
+        </button>
+      </div>
 
-  const pageTransition: Transition = { // Transition tipini açıkça belirtiyoruz
-    type: 'tween',
-    ease: 'anticipate',
-    duration: 0.5,
-  };
-
-return (
-  <motion.div
-    initial="initial"
-    animate="in"
-    exit="out"
-    variants={pageVariants}
-    transition={pageTransition}
-    className="min-h-screen flex flex-col items-center bg-gray-100 p-6 md:p-10"
-  >
-    {/* Başlık ve çıkış butonu */}
-    <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg w-full max-w-5xl text-center mb-6">
-      <h2 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900">Yönetim Paneli</h2>
-      {message && <p className="text-gray-700 mb-4">{message}</p>}
-      <button
-        onClick={handleLogout}
-        className="py-2 px-5 rounded-xl text-white bg-red-600 hover:bg-red-700 transition duration-200 text-base md:text-lg"
-      >
-        Çıkış Yap
-      </button>
+      {/* Depo kartları */}
+      <div className="w-full max-w-5xl flex flex-col gap-6">
+        <CurrentWarehouses />
+        <AddWarehouse />
+      </div>
     </div>
-
-    {/* Depo kartları */}
-    <div className="w-full max-w-5xl flex flex-col gap-6">
-      <CurrentWarehouses />
-      <AddWarehouse />
-    </div>
-  </motion.div>
-);
-
+  );
 }
