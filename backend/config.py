@@ -21,9 +21,9 @@ class Config:
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     # Bu değerleri üretim ortamında ortam değişkenlerinden almalısınız.
-    MAIL_USERNAME = os.environ.get('EMAIL_USER', 'senin_e-posta_adresin@gmail.com')
-    MAIL_PASSWORD = os.environ.get('EMAIL_PASS', 'senin_gmail_uygulama_sifren') # Uygulama şifresi kullanın
-    MAIL_DEFAULT_SENDER = os.environ.get('EMAIL_USER', 'senin_e-posta_adresin@gmail.com')
+    MAIL_USERNAME = os.environ.get('EMAIL_USER', 'akyapi.3d.depoyonetimi@gmail.com')
+    MAIL_PASSWORD = os.environ.get('EMAIL_PASS', 'rhkd ukpx bpfg plgg') # Uygulama şifresi kullanın
+    MAIL_DEFAULT_SENDER = os.environ.get('EMAIL_USER', 'akyapi.3d.depoyonetimi@gmail.com')
 
     # Frontend URL'i (CORS ve şifre sıfırlama linki için)
     FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')

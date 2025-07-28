@@ -20,3 +20,5 @@ env/
 .DS_Store
 
 database_baglanti.py
+
+templates/password_reset_email.html

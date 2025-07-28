@@ -12,9 +12,7 @@ import 'leaflet/dist/images/marker-icon-2x.png';
 import 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/images/marker-icon.png';
 
-interface DynamicMapProps {
-  onAreaDrawn?: (geoJsonData: any) => void;
-}
+import { DynamicMapProps } from '../../types/warehouse';
 
 // Leaflet ikon sorunu çözümü ve TypeScript hatası için düzeltme
 declare module 'leaflet' {

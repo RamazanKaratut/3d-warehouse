@@ -1,6 +1,7 @@
-// src/app/layout.tsx (veya app/layout.tsx)
+// src/app/layout.tsx
+// src/app/globals.css'i import ettiğinizden emin olun
 import './globals.css';
-import Link from 'next/link'; 
+import Sidebar from '@/app/components/Sidebar'; // Sidebar bileşenini import et
 
 export const metadata = {
   title: 'Depo Yönetim Sistemi',
@@ -13,30 +14,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr">
-      <body className="flex flex-col min-h-screen"> {/* body'ye flex ve min-h-screen eklendi */}
-        <nav className="bg-gray-800 p-4 shadow-md">
-          <div className="container mx-auto flex justify-between items-center">
-            <Link href="/pages/dashboard" className="text-white text-2xl font-bold hover:text-blue-300 transition-colors">
-              Depo Yönetimi
-            </Link>
-            <div className="space-x-4">
-              <Link href="/pages/add-warehouse" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Depo Ekle
-              </Link>
-              <Link href="/pages/my-warehouses" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Depolarım
-              </Link>
-            </div>
-          </div>
-        </nav>
-        <main className="flex-grow"> {/* `flex-grow` ekliyoruz */}
+    <html lang="tr" className="h-full">
+      <body className="flex h-full min-h-screen"> {/* `h-full` ekledik, `flex` ve `min-h-screen` zaten vardı */}
+        {/* Sidebar burada olacak */}
+        <Sidebar />
+
+        {/* Ana İçerik Alanı */}
+        {/* Sidebar ile birlikte sayfayı doldurması için flex-grow ve overflow-y-auto ekliyoruz */}
+        <main className="flex-grow p-4 md:p-8 overflow-y-hidden bg-gray-100">
           {children}
         </main>
-        {/* Opsiyonel: Eğer sabit bir footer'ınız varsa buraya eklersiniz */}
-        {/* <footer className="bg-gray-800 text-white p-4 text-center">
-          Footer İçeriği
-        </footer> */}
+
       </body>
     </html>
   );

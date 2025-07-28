@@ -3,18 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // useRouter'ı import ettik
-
-interface Warehouse {
-  id: string; // Backend'den gelen ID string olabilir veya number olabilir, modelinize göre ayarlayın
-  name: string;
-  location: string;
-  capacity: number;
-  area_m2: number;
-  description: string;
-  type: string; // 'open' veya 'closed'
-  height_m: number | null; // Kapalı depolarda null olabilir
-  // Diğer alanlar (GeoJSON gibi) burada gösterilmeyebilir veya daha detaylı bir sayfada gösterilebilir
-}
+import { Warehouse } from '@/app/types/warehouse'; // Depo tipini içe aktardık
 
 export default function MyWarehouses() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);

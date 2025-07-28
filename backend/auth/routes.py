@@ -1,6 +1,6 @@
 # backend/auth/routes.py
 
-from flask import request, jsonify, current_app, url_for
+from flask import request, jsonify, current_app, url_for, render_template 
 from . import auth_bp
 from backend.models import User # Mutlak import
 from backend.extensions import db, mail, bcrypt, jwt # <-- jwt de eklendi!
@@ -12,9 +12,6 @@ from datetime import datetime, timedelta
 # Şifre Sıfırlama Tokenı Oluşturma
 def generate_reset_token(email):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    # SECURITY_PASSWORD_SALT yerine JWT_SECRET_KEY veya farklı bir salt kullanabiliriz
-    # Flask-JWT-Extended varsayılan olarak SECRET_KEY'i kullanır, bu yüzden bu salt gereksiz olabilir.
-    # Ancak itsdangerous için bırakıyorum.
     return serializer.dumps(email, salt=current_app.config['SECURITY_PASSWORD_SALT'])
 
 # Şifre Sıfırlama Tokenı Doğrulama
@@ -93,11 +90,9 @@ def profile():
     claims = get_jwt()
 
     return jsonify({
-        'message': f'Merhaba {user.username}! Bu korumalı bir kaynak.',
         'user_id': user.id,
         'username': user.username,
         'email': user.email,
-        # 'is_admin': claims.get('is_admin') # <-- BU SATIRI DA SİLİN!
     }), 200
 
 @auth_bp.route('/logout', methods=['POST'])
@@ -105,11 +100,10 @@ def profile():
 def logout():
     try:
         current_user = get_jwt_identity()
-        current_app.logger.info(f"Logout isteği: Kullanıcı kimliği {current_user}") # << BU ÇIKTIYI GÖRMEK İSTİYORUM
+        current_app.logger.info(f"Logout isteği: Kullanıcı kimliği {current_user}")
 
-        # Gelen isteğin başlıklarını ve çerezlerini de loglayalım (sadece debug için!)
-        print("Gelen İstek Başlıkları:", request.headers) # << BUNU DA GÖRMEK İSTİYORUM
-        print("Gelen İstek Çerezleri:", request.cookies) # << VE BUNU DA GÖRMEK İSTİYORUM
+        print("Gelen İstek Başlıkları:", request.headers)
+        print("Gelen İstek Çerezleri:", request.cookies) 
 
         response = jsonify({'message': 'Çıkış başarılı!'})
         unset_jwt_cookies(response)
@@ -118,7 +112,6 @@ def logout():
         current_app.logger.error(f"Logout sırasında hata: {e}")
         return jsonify({'message': 'Çıkış sırasında bir hata oluştu.'}), 500
 
-# Şifre sıfırlama rotaları aynı kalabilir, JWT ile doğrudan ilgili değiller
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.get_json()
@@ -128,30 +121,35 @@ def forgot_password():
         return jsonify({'message': 'E-posta adresi gerekli.'}), 400
 
     user = User.query.filter_by(email=email).first()
+    # Güvenlik nedeniyle, kullanıcı bulunsa da bulunmasa da aynı mesajı döndürmek yaygın bir pratiktir.
+    # Bu, kötü niyetli kişilerin sisteminizde hangi e-postaların kayıtlı olduğunu anlamasını engeller.
     if not user:
+        current_app.logger.warning(f"Kayıtlı olmayan e-posta için şifre sıfırlama talebi: {email}")
         return jsonify({'message': 'Şifre sıfırlama linki e-posta adresinize gönderildi (Eğer kayıtlıysa).'}), 200
 
     token = generate_reset_token(user.email)
-    reset_url = f"{current_app.config['FRONTEND_URL']}/reset-password?token={token}" # Frontend'deki doğru yolu kontrol edin
+    # FRONTEND_URL, config.py dosyanızda tanımladığınız URL olmalı
+    # Bu URL, kullanıcının tıklayacağı ve yeni şifresini gireceği frontend sayfanızın adresi olacak.
+    reset_url = f"{current_app.config['FRONTEND_URL']}/pages/user/new-password?token={token}"
 
-    msg = Message('Şifrenizi Sıfırlayın',
-                  sender=current_app.config['MAIL_DEFAULT_SENDER'],
-                  recipients=[user.email])
-    msg.body = f"""Merhaba {user.username},
+    msg = Message('Şifrenizi Sıfırlayın - Akyapı 3D Depo Yönetimi', # Mailin konu başlığı
+                  sender=current_app.config['MAIL_DEFAULT_SENDER'], # Mailin kimden gönderildiği (config'den gelir)
+                  recipients=[user.email]) # Mailin kime gönderileceği
 
-        Şifrenizi sıfırlamak için aşağıdaki bağlantıyı tıklayın:
-        {reset_url}
-        
-        Bu link 1 saat içinde sona erecektir. Eğer şifre sıfırlama talebinde bulunmadıysanız, bu e-postayı dikkate almayın.
-        
-        Saygılarımızla,
-        Akyapı Destek Ekibi
-        """
+    # HTML şablonunu 'templates' klasöründen yükler ve dinamik verileri içine yerleştirir.
+    # 'username' ve 'reset_url' adında değişkenleri HTML şablonuna iletiyoruz.
+    msg.html = render_template(
+        'password_reset_email.html', # 'templates' klasöründeki HTML dosyasının adı
+        username=user.username,      # HTML içindeki {{ username }} için değer (kullanıcının adı)
+        reset_url=reset_url          # HTML içindeki {{ reset_url }} için değer (sıfırlama linki)
+    )
+
     try:
-        mail.send(msg)
+        mail.send(msg) # E-postayı gönderir
+        current_app.logger.info(f"'{email}' adresine şifre sıfırlama linki gönderildi.")
         return jsonify({'message': 'Şifre sıfırlama linki e-posta adresinize gönderildi.'}), 200
     except Exception as e:
-        current_app.logger.error(f"E-posta gönderme hatası: {e}")
+        current_app.logger.error(f"'{email}' adresine e-posta gönderme hatası: {e}")
         return jsonify({'message': 'E-posta gönderme hatası oluştu.'}), 500
 
 @auth_bp.route('/protected', methods=['GET'])
@@ -165,7 +163,6 @@ def protected():
 
     # is_admin'i kaldırdığımız için, eğer hala referans varsa burayı da düzeltelim
     return jsonify({
-        'message': f'Merhaba {user.username}! Bu korumalı bir kaynak.',
         'user_id': user.id,
         'username': user.username,
         'email': user.email
