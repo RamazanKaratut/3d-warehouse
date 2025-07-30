@@ -1,4 +1,4 @@
-// 'use client'; // Bu satır kalmalı
+'use client'; // Bu satır kalmalı
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';

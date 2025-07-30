@@ -23,80 +23,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const pathname = usePathname();
 
     const publicPaths = [
-        '/', // Giriş sayfası
+        '/',
         '/pages/user/register',
         '/pages/user/reset-password',
         '/pages/user/forgot-password'
     ];
 
+    // usePathname() bir string döndürdüğü için, direkt includes kullanabiliriz.
     const isPublicPath = publicPaths.includes(pathname);
 
     const checkAuthStatus = useCallback(async () => {
-        setIsLoadingAuth(true);
+        setIsLoadingAuth(true); // Kimlik doğrulama kontrolü başladığında yükleme durumunu ayarla
         try {
-            // Frontend'de localStorage'dan token okumaya ÇALIŞMAYIN.
-            // Axios (api instance'ı) 'withCredentials: true' olduğu için
-            // tarayıcı, backend'den gelen HTTP-Only çerezleri otomatik olarak gönderir.
+            // Backend'e geçerli bir oturum olup olmadığını sorar.
+            // Axios 'withCredentials: true' olduğu için tarayıcı HTTP-Only çerezleri otomatik gönderir.
+            const response = await api.get('/auth/protected');
 
-            const response = await api.get('/auth/protected'); // Backend'e geçerli bir oturum olup olmadığını sorar
-            
-            // Eğer yanıt 200 OK ise, oturum geçerlidir.
-            if (response.status === 200) {
-                setIsLoggedIn(true);
-                setUsername(response.data.username); // Backend'den gelen kullanıcı adını sakla
-                
-                // Eğer kullanıcı zaten giriş yapmışsa ve genel bir yoldaysa, dashboard'a yönlendir
-                if (isPublicPath) {
-                    router.replace('/pages/dashboard');
-                }
-            } else {
-                // Backend 200 dışında bir status kodu döndürdüyse (örn. 401), oturum geçerli değil
-                setIsLoggedIn(false);
-                setUsername(null);
-                // Korumalı bir yoldaysa, giriş sayfasına yönlendir
-                if (!isPublicPath) {
-                    router.replace('/');
-                }
+            // Eğer buraya gelirse (catch'e düşmezse), istek başarılıdır (200 OK).
+            setIsLoggedIn(true);
+            setUsername(response.data.username); // Backend'den gelen kullanıcı adını sakla
+            console.log("Auth check successful, user logged in:", response.data.username); // Log için kullanıcı adı eklendi
+
+            // Kullanıcı giriş yapmışsa ve genel bir yoldaysa, dashboard'a yönlendir
+            if (isPublicPath) {
+                router.replace('/pages/dashboard');
             }
         } catch (error: any) {
-            // İstek sırasında bir hata oluştuysa (örn. ağ hatası, backend'den 401 yanıtı)
-            // Axios 4xx/5xx hatalarında catch bloğuna düşer.
-            console.error('Auth check error:', error);
+            if (error.response && error.response.status === 401) {
+                console.warn('Auth check: User is not authenticated or session expired (401).'); // Artık bu mesajı görmelisiniz
+            } else {
+                console.error('Auth check error (unexpected):', error);
+            }
+
             setIsLoggedIn(false);
             setUsername(null);
-            
-            // Tokenları localStorage'dan kaldırmanıza gerek yok, zaten orada yoklar
-            // Eğer varsa (eski bir kalıntı), yine de temizlemek zarar vermez
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            
-            // Korumalı bir yoldaysa, giriş sayfasına yönlendir
-            if (!isPublicPath) {
-                router.replace('/');
+
+            if (!isPublicPath) { // Eğer şu anki sayfa korumalı bir sayfa ise
+                router.replace('/'); // Giriş sayfasına yönlendir
             }
         } finally {
-            setIsLoadingAuth(false);
+            setIsLoadingAuth(false); // Kimlik doğrulama kontrolü tamamlandığında yükleme durumunu bitir
         }
-    }, [router, pathname, isPublicPath]); // Bağımlılıkları güncelledik
+    }, [router, pathname, isPublicPath]); // Bağımlılıklar güncellendi
 
     useEffect(() => {
-        // Uygulama yüklendiğinde veya yol değiştiğinde kimlik doğrulama durumunu kontrol et
-        // isPublicPath kontrolü, public yollarda gereksiz yönlendirmeyi engeller.
+        // Uygulama yüklendiğinde veya yol değiştiğinde kimlik doğrulama durumunu kontrol et.
+        // Public yollarda gereksiz yönlendirmeyi önlemek için 'isPublicPath' kullanılmaz,
+        // çünkü checkAuthStatus zaten içeride yönlendirme mantığını yönetiyor.
+        // Amaç, her yol değişiminde oturumun hala geçerli olup olmadığını kontrol etmektir.
         checkAuthStatus();
-    }, [checkAuthStatus]);
-
+    }, [checkAuthStatus]); // `checkAuthStatus` useCallback olduğu için doğru bağımlılık
 
     const logout = useCallback(async () => {
         try {
             await api.post('/auth/logout', {}); // Backend'deki logout endpoint'i çerezleri temizleyecek
+            console.log("Logout successful on backend."); // Backend başarılıysa logla
         } catch (error) {
             console.error('Logout isteği sırasında hata:', error);
+            // Hata olsa bile frontend durumunu temizle ve yönlendir.
+            // Kullanıcı deneyimi için önemli.
         } finally {
-            // Frontend tarafında localStorage'daki gereksiz tokenları temizle
-            localStorage.removeItem('rememberedUsername'); // Bu hala kullanılabilir
-            
             setIsLoggedIn(false);
             setUsername(null);
+            localStorage.removeItem('rememberedUsername');
             router.replace('/'); // Kullanıcıyı giriş sayfasına yönlendir
         }
     }, [router]);
