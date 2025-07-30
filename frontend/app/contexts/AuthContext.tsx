@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import api from '@/app/utils/api';
+import api from '@/app/utils/api'; // Axios instance with withCredentials: true
 
 interface AuthContextType {
     isLoggedIn: boolean;
@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const pathname = usePathname();
 
     const publicPaths = [
-        '/',
+        '/', // Giriş sayfası
         '/pages/user/register',
         '/pages/user/reset-password',
         '/pages/user/forgot-password'
@@ -34,63 +34,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkAuthStatus = useCallback(async () => {
         setIsLoadingAuth(true);
         try {
-            const accessToken = localStorage.getItem('access_token');
-            if (!accessToken) {
-                setIsLoggedIn(false);
-                setUsername(null);
-                if (!isPublicPath) {
-                    router.replace('/');
-                }
-                return;
-            }
+            // Frontend'de localStorage'dan token okumaya ÇALIŞMAYIN.
+            // Axios (api instance'ı) 'withCredentials: true' olduğu için
+            // tarayıcı, backend'den gelen HTTP-Only çerezleri otomatik olarak gönderir.
 
-            const response = await api.get('/auth/protected');
+            const response = await api.get('/auth/protected'); // Backend'e geçerli bir oturum olup olmadığını sorar
+            
+            // Eğer yanıt 200 OK ise, oturum geçerlidir.
             if (response.status === 200) {
                 setIsLoggedIn(true);
-                setUsername(response.data.username);
+                setUsername(response.data.username); // Backend'den gelen kullanıcı adını sakla
+                
+                // Eğer kullanıcı zaten giriş yapmışsa ve genel bir yoldaysa, dashboard'a yönlendir
                 if (isPublicPath) {
                     router.replace('/pages/dashboard');
                 }
             } else {
+                // Backend 200 dışında bir status kodu döndürdüyse (örn. 401), oturum geçerli değil
                 setIsLoggedIn(false);
                 setUsername(null);
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
+                // Korumalı bir yoldaysa, giriş sayfasına yönlendir
                 if (!isPublicPath) {
                     router.replace('/');
                 }
             }
         } catch (error: any) {
+            // İstek sırasında bir hata oluştuysa (örn. ağ hatası, backend'den 401 yanıtı)
+            // Axios 4xx/5xx hatalarında catch bloğuna düşer.
             console.error('Auth check error:', error);
             setIsLoggedIn(false);
             setUsername(null);
+            
+            // Tokenları localStorage'dan kaldırmanıza gerek yok, zaten orada yoklar
+            // Eğer varsa (eski bir kalıntı), yine de temizlemek zarar vermez
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
+            
+            // Korumalı bir yoldaysa, giriş sayfasına yönlendir
             if (!isPublicPath) {
                 router.replace('/');
             }
         } finally {
             setIsLoadingAuth(false);
         }
-    }, [router, pathname, isPublicPath]);
+    }, [router, pathname, isPublicPath]); // Bağımlılıkları güncelledik
 
     useEffect(() => {
+        // Uygulama yüklendiğinde veya yol değiştiğinde kimlik doğrulama durumunu kontrol et
+        // isPublicPath kontrolü, public yollarda gereksiz yönlendirmeyi engeller.
         checkAuthStatus();
     }, [checkAuthStatus]);
 
 
     const logout = useCallback(async () => {
         try {
-            await api.post('/auth/logout', {});
+            await api.post('/auth/logout', {}); // Backend'deki logout endpoint'i çerezleri temizleyecek
         } catch (error) {
             console.error('Logout isteği sırasında hata:', error);
         } finally {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            localStorage.removeItem('rememberedUsername');
+            // Frontend tarafında localStorage'daki gereksiz tokenları temizle
+            localStorage.removeItem('rememberedUsername'); // Bu hala kullanılabilir
+            
             setIsLoggedIn(false);
             setUsername(null);
-            router.replace('/');
+            router.replace('/'); // Kullanıcıyı giriş sayfasına yönlendir
         }
     }, [router]);
 

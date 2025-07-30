@@ -139,6 +139,8 @@ def logout():
     current_app.logger.info(f"Logout isteği alındı: Kullanıcı ID {current_user_id}")
     
     response = jsonify({'message': 'Başarılı bir şekilde çıkış yapıldı!'})
+    
+    unset_jwt_cookies(response)
     return response, 200
 
 @auth_bp.route('/forgot-password', methods=['POST'])

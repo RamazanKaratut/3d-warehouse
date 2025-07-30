@@ -1,10 +1,10 @@
-'use client';
+// 'use client'; // Bu satır kalmalı
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import api from '@/app/utils/api';
-import { useAuth } from '@/app/contexts/AuthContext';
+import api from '@/app/utils/api'; // Bu import kalmalı, çünkü Axios instance'ınızda withCredentials: true var
+import { useAuth } from '@/app/contexts/AuthContext'; // Bu import kalmalı
 
 export default function LoginPage() {
     const [username, setUsername] = useState<string>('');
@@ -12,54 +12,73 @@ export default function LoginPage() {
     const [rememberMe, setRememberMe] = useState<boolean>(false);
     const [message, setMessage] = useState<string>('');
     const router = useRouter();
-    const { isLoggedIn, isLoadingAuth, checkAuthStatus } = useAuth();
+    const { isLoggedIn, isLoadingAuth, checkAuthStatus } = useAuth(); // useAuth hook'u kalmalı
 
     useEffect(() => {
+        // isLoadingAuth tamamlandığında ve kullanıcı giriş yapmışsa, dashboard'a yönlendir.
+        // Bu mantık doğru, çünkü checkAuthStatus zaten arka planda oturum durumunu kontrol ediyor.
         if (!isLoadingAuth && isLoggedIn) {
             router.replace('/pages/dashboard');
         }
 
+        // 'Beni Hatırla' işlevselliği için kullanıcı adını localStorage'dan alma kısmı kalabilir.
+        // Bu, kimlik doğrulama tokenları ile ilgili değildir, sadece kullanıcı deneyimi içindir.
         const storedUsername = localStorage.getItem('rememberedUsername');
         if (storedUsername) {
             setUsername(storedUsername);
             setRememberMe(true);
         }
-    }, [isLoggedIn, isLoadingAuth, router]);
+    }, [isLoggedIn, isLoadingAuth, router]); // Bağımlılıklar doğru
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage('');
 
         try {
+            // Giriş isteği api (Axios) üzerinden gönderilir.
+            // Axios'taki `withCredentials: true` sayesinde
+            // backend'den gelen HTTP-Only çerezler otomatik olarak işlenir.
             const response = await api.post('/auth/login', { username, password });
-            const data = response.data;
-            setMessage(data.message);
+            const data = response.data; // Backend'den gelen 'message', 'username', 'user_id' gibi bilgiler
 
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('refresh_token', data.refresh_token);
+            setMessage(data.message); // Giriş başarılı mesajını göster
 
+            // --- BURA ÖNEMLİ DEĞİŞİKLİK: localStorage.setItem satırlarını KALDIR ---
+            // localStorage.setItem('access_token', data.access_token); // Bu satırı SİL
+            // localStorage.setItem('refresh_token', data.refresh_token); // Bu satırı SİL
+
+            // 'Beni Hatırla' mantığı kullanıcı adı için hala geçerli olabilir.
             if (rememberMe) {
                 localStorage.setItem('rememberedUsername', username);
             } else {
                 localStorage.removeItem('rememberedUsername');
             }
 
+            // checkAuthStatus çağrısı kalmalı. Bu, AuthContext'in oturum durumunu günceller.
+            // (Artık localStorage'dan token okumadığı, direkt backend'e sorduğu için.)
             await checkAuthStatus();
 
+            // Başarılı girişten sonra kullanıcıyı dashboard'a yönlendir.
             router.replace('/pages/dashboard');
         } catch (error: any) {
+            // Hata durumunda mesaj göster.
             if (error.response && error.response.data && error.response.data.message) {
                 setMessage(error.response.data.message);
             } else {
                 setMessage('Giriş başarısız oldu. Lütfen tekrar deneyin.');
             }
             console.log('Giriş isteği sırasında hata:', error);
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+
+            // --- BURA ÖNEMLİ DEĞİŞİKLİK: localStorage.removeItem satırlarını KALDIR ---
+            // localStorage.removeItem('access_token'); // Bu satırı SİL
+            // localStorage.removeItem('refresh_token'); // Bu satırı SİL
+
+            // Sadece 'Beni Hatırla' için kaydedilen kullanıcı adını hata durumunda da silebiliriz.
             localStorage.removeItem('rememberedUsername');
         }
     };
 
+    // Yükleme durumu veya zaten giriş yapılmışsa spinner göster. Bu kısım kalmalı.
     if (isLoadingAuth || (isLoggedIn && !isLoadingAuth)) {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -68,6 +87,7 @@ export default function LoginPage() {
         );
     }
 
+    // Giriş formu ve diğer UI elemanları kalmalı.
     return (
         <div
             className="min-h-screen flex flex-col lg:flex-row items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-4 sm:p-6 lg:p-8"
