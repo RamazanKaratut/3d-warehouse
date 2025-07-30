@@ -1,107 +1,114 @@
-// contexts/WarehouseFormContext.tsx
+// src/app/contexts/WarehouseFormContext.tsx
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import area from '@turf/area';
-import { WarehouseFormState, WarehouseFormActions } from '../types/warehouse';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { LatLngExpression } from 'leaflet';
+import * as turfArea from '@turf/area';
+import * as turfCenter from '@turf/center';
+import { polygon } from '@turf/helpers';
 
-interface WarehouseFormContextType extends WarehouseFormState, WarehouseFormActions {}
+import { WarehouseFormState, WarehouseFormActions } from '@/app/types/warehouse';
+
+const AKYAPI_LOGISTICS_COORDINATES: LatLngExpression = [38.734802, 35.467987];
+const OCEAN_CENTER_COORDINATES: LatLngExpression = [0, 0];
+
+const DEFAULT_MAP_ZOOM = 15;
+const OCEAN_MAP_ZOOM = 18;
+
+type WarehouseFormContextType = WarehouseFormState & WarehouseFormActions;
 
 const WarehouseFormContext = createContext<WarehouseFormContextType | undefined>(undefined);
 
-export function WarehouseFormProvider({ children }: { children: React.ReactNode }) {
-  const [warehouseName, setWarehouseName] = useState('');
-  const [location, setLocation] = useState('');
-  const [capacity, setCapacity] = useState('');
-  const [description, setDescription] = useState('');
-  const [drawnAreaGeoJSON, setDrawnAreaGeoJSON] = useState<any | null>(null);
-  const [calculatedAreaM2, setCalculatedAreaM2] = useState<number | null>(null);
-  const [addMethod, setAddMethod] = useState<'map' | 'manual'>('map');
-  const [warehouseWidth, setWarehouseWidth] = useState('');
-  const [warehouseLength, setWarehouseLength] = useState('');
-  const [warehouseType, setWarehouseType] = useState<'open' | 'closed' | ''>('');
-  const [warehouseHeight, setWarehouseHeight] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+export function WarehouseFormProvider({ children }: { children: ReactNode }) {
+    const [warehouseName, setWarehouseName] = useState<string>('');
+    const [location, setLocation] = useState<string>('');
+    const [capacity, setCapacity] = useState<string>('');
+    const [description, setDescription] = useState<string>('');
+    const [drawnAreaGeoJSON, setDrawnAreaGeoJSON] = useState<any | null>(null);
+    const [calculatedAreaM2, setCalculatedAreaM2] = useState<number | null>(null);
+    const [addMethod, setAddMethod] = useState<'map' | 'manual'>('map');
+    const [warehouseType, setWarehouseType] = useState<'open' | 'closed' | ''>('');
+    const [warehouseHeight, setWarehouseHeight] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [message, setMessage] = useState<string>('');
 
-  const handleMapDrawn = useCallback((geoJsonData: any) => {
-    setDrawnAreaGeoJSON(geoJsonData);
-    const calculated = area(geoJsonData);
-    setCalculatedAreaM2(calculated);
-  }, []);
+    const [mapInitialCenter, setMapInitialCenter] = useState<[number, number]>(AKYAPI_LOGISTICS_COORDINATES as [number, number]);
+    const [mapInitialZoom, setMapInitialZoom] = useState<number>(DEFAULT_MAP_ZOOM);
 
-  const calculateManualArea = useCallback(() => {
-    const width = parseFloat(warehouseWidth);
-    const length = parseFloat(warehouseLength);
-    if (!isNaN(width) && !isNaN(length) && width > 0 && length > 0) {
-      setCalculatedAreaM2(width * length);
-    } else {
-      setCalculatedAreaM2(null);
-    }
-  }, [warehouseWidth, warehouseLength]);
+    const handleMapDrawn = (geoJsonData: any) => {
+        setDrawnAreaGeoJSON(geoJsonData);
 
-  // addMethod değiştiğinde alan hesaplamayı veya sıfırlamayı yönet
-  useEffect(() => {
-    if (addMethod === 'manual') {
-      calculateManualArea();
-    } else {
-      setCalculatedAreaM2(null); // Harita moduna geçildiğinde manuel alanı sıfırla
-      setWarehouseWidth('');
-      setWarehouseLength('');
-    }
-  }, [addMethod, warehouseWidth, warehouseLength, calculateManualArea]);
+        if (geoJsonData && geoJsonData.geometry && geoJsonData.geometry.coordinates) {
+            const feature = polygon(geoJsonData.geometry.coordinates);
+            const area = turfArea.default(feature);
+            setCalculatedAreaM2(area);
 
-  const resetForm = useCallback(() => {
-    setWarehouseName('');
-    setLocation('');
-    setCapacity('');
-    setDescription('');
-    setDrawnAreaGeoJSON(null);
-    setCalculatedAreaM2(null);
-    setAddMethod('map'); // Varsayılan olarak harita yöntemine dön
-    setWarehouseWidth('');
-    setWarehouseLength('');
-    setWarehouseType('');
-    setWarehouseHeight('');
-    setLoading(false);
-    setMessage('');
-  }, []);
+            const centerPoint = turfCenter.default(feature);
+            setMapInitialCenter(centerPoint.geometry.coordinates.reverse() as [number, number]);
+        } else {
+            setCalculatedAreaM2(null);
+        }
+    };
 
-  const value = {
-    warehouseName, setWarehouseName,
-    location, setLocation,
-    capacity, setCapacity,
-    description, setDescription,
-    drawnAreaGeoJSON, setDrawnAreaGeoJSON,
-    calculatedAreaM2, setCalculatedAreaM2,
-    addMethod, setAddMethod: useCallback((method: 'map' | 'manual') => {
-      setAddMethod(method);
-      if (method === 'manual') {
+    useEffect(() => {
+        setCalculatedAreaM2(null);
         setDrawnAreaGeoJSON(null);
-      }
-    }, []), // addMethod'u değiştiren callback, harita geoJson'ı sıfırlar
-    warehouseWidth, setWarehouseWidth,
-    warehouseLength, setWarehouseLength,
-    warehouseType, setWarehouseType,
-    warehouseHeight, setWarehouseHeight,
-    loading, setLoading,
-    message, setMessage,
-    handleMapDrawn,
-    calculateManualArea,
-    resetForm,
-  };
 
-  return (
-    <WarehouseFormContext.Provider value={value}>
-      {children}
-    </WarehouseFormContext.Provider>
-  );
+        if (addMethod === 'map') {
+            setMapInitialCenter(AKYAPI_LOGISTICS_COORDINATES as [number, number]);
+            setMapInitialZoom(DEFAULT_MAP_ZOOM);
+        } else {
+            setMapInitialCenter(OCEAN_CENTER_COORDINATES as [number, number]);
+            setMapInitialZoom(OCEAN_MAP_ZOOM);
+        }
+        console.log("addMethod değişti. Yeni harita merkezi:", (addMethod === 'map' ? AKYAPI_LOGISTICS_COORDINATES : OCEAN_CENTER_COORDINATES), "Yeni zoom:", (addMethod === 'map' ? DEFAULT_MAP_ZOOM : OCEAN_MAP_ZOOM));
+    }, [addMethod]);
+
+    const resetForm = () => {
+        setWarehouseName('');
+        setLocation('');
+        setCapacity('');
+        setDescription('');
+        setDrawnAreaGeoJSON(null);
+        setCalculatedAreaM2(null);
+        setAddMethod('map');
+        setWarehouseType('');
+        setWarehouseHeight('');
+        setLoading(false);
+        setMessage('');
+        setMapInitialCenter(AKYAPI_LOGISTICS_COORDINATES as [number, number]);
+        setMapInitialZoom(DEFAULT_MAP_ZOOM);
+    };
+
+    const value = {
+        warehouseName, setWarehouseName,
+        location, setLocation,
+        capacity, setCapacity,
+        description, setDescription,
+        drawnAreaGeoJSON, setDrawnAreaGeoJSON,
+        calculatedAreaM2, setCalculatedAreaM2,
+        addMethod, setAddMethod,
+        warehouseType, setWarehouseType,
+        warehouseHeight, setWarehouseHeight,
+        loading, setLoading,
+        message, setMessage,
+        mapInitialCenter,
+        mapInitialZoom,
+        handleMapDrawn,
+        resetForm,
+    };
+
+    return (
+        <WarehouseFormContext.Provider value={value}>
+            {children}
+        </WarehouseFormContext.Provider>
+    );
 }
 
 export function useWarehouseForm() {
-  const context = useContext(WarehouseFormContext);
-  if (context === undefined) {
-    throw new Error('useWarehouseForm must be used within a WarehouseFormProvider');
-  }
-  return context;
+    const context = useContext(WarehouseFormContext);
+    if (context === undefined) {
+        throw new Error('useWarehouseForm must be used within a WarehouseFormProvider');
+    }
+    return context;
 }

@@ -22,3 +22,5 @@ env/
 database_baglanti.py
 
 templates/password_reset_email.html
+
+login_mail.py

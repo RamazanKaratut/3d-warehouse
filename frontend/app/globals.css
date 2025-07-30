@@ -1,5 +1,3 @@
-/* src/app/globals.css (veya app/globals.css) */
-
 @import "tailwindcss";
 
 :root {
@@ -16,17 +14,44 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
-    --foreground: #ededed;
+    --background: #171717;
+    --foreground: #171717;
   }
 }
 
-body {
-  height: 100%; /* Veya 100% - test edeceğiz */
+html, body, #__next {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  color:#171717;
-  flex-direction: row;
-  overflow-x: hidden;
+}
+
+body{
+  /* overflow: hidden; */
+}
+
+.angle-label,
+.distance-label {
+  pointer-events: none; /* Etiketlerin harita tıklamalarını engellemesini önler */
+  z-index: 1000; /* Haritadaki diğer elemanların üzerinde görünmesini sağlar */
+  transform: translate(-50%, -50%); /* İşaretçiyi tam orta noktasına hizala */
+  text-align: center;
+  white-space: nowrap; /* Metnin tek satırda kalmasını sağlar */
+}
+
+.angle-label div,
+.distance-label div {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4); /* Gölge efekti */
+}
+
+/* Add to your global CSS */
+.angle-label {
+    pointer-events: none !important;
+    transform: translate(-50%, -100%);
+    white-space: nowrap;
+    font-family: Arial, sans-serif;
+    z-index: 999;
 }

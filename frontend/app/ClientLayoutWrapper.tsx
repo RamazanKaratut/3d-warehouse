@@ -1,7 +1,7 @@
 // src/app/ClientLayoutWrapper.tsx
 'use client';
 
-import { AnimatePresence, motion, Transition } from 'framer-motion'; // Transition'ı da import ettik
+import { AnimatePresence, motion, Transition } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import React from 'react';
 
@@ -18,9 +18,8 @@ export default function ClientLayoutWrapper({
     out: { opacity: 0, y: -20 },
   };
 
-  // 'Transition' tipini doğrudan Framer Motion'dan alıyoruz
   const pageTransition: Transition = {
-    type: 'tween', // 'tween' string literal olarak doğru
+    type: 'tween',
     ease: 'anticipate',
     duration: 0.5,
   };

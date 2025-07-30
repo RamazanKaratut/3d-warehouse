@@ -1,54 +1,58 @@
-# backend/models.py
-
-from .extensions import db # extensions.py'den db'yi import edin
-from datetime import datetime # created_at için datetime ekledik
-from werkzeug.security import generate_password_hash, check_password_hash # bcrypt yerine werkzeug
+from extensions import db, bcrypt
+from sqlalchemy.dialects.postgresql import JSONB
+from datetime import datetime
 
 class User(db.Model):
     __tablename__ = 'users'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
-    created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow, nullable=False) # Varsayılan olarak UTC zamanı
+    created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow, nullable=False)
+
+    warehouses = db.relationship('Warehouse', backref='owner', lazy=True)
 
     def __repr__(self):
         return f"<User {self.username}>"
 
-    def set_password(self, plain_password): # 'password' argüman adını değiştirdim çakışmasın diye
-        from .extensions import bcrypt
-        # bcrypt ile hash'lenmiş şifreyi yeni 'password' sütununa atıyoruz
+    def set_password(self, plain_password):
         self.password = bcrypt.generate_password_hash(plain_password).decode('utf-8')
 
     def check_password(self, plain_password):
-        from .extensions import bcrypt
-        # bcrypt ile hash'lenmiş şifreyi yeni 'password' sütunundan kontrol ediyoruz
         return bcrypt.check_password_hash(self.password, plain_password)
 
 class Warehouse(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    location = db.Column(db.String(200), nullable=False)
-    capacity = db.Column(db.Integer, nullable=False)
-    area_m2 = db.Column(db.Float, nullable=False)
-    description = db.Column(db.Text)
-    geo_json = db.Column(db.JSON) # GeoJSON verisi için JSON tipi
-    type = db.Column(db.String(10), nullable=False) # 'open' veya 'closed'
-    height_m = db.Column(db.Float, nullable=True) # Sadece kapalı depolar için
+    __tablename__ = 'depo'
+    __table_args__ = {'extend_existing': True}
 
-    # Kullanıcı ile ilişki
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    ad = db.Column(db.String(100), nullable=False)
+    konum = db.Column(db.Text)
+    alan_verisi_3d = db.Column(JSONB)
+    aciklama = db.Column(db.Text)
+    tipi = db.Column(db.String(10), nullable=False)
+    kapasite = db.Column(db.Integer, nullable=False)
+    yukseklik = db.Column(db.Numeric)
+    taban_alani = db.Column(db.Numeric)
+    raf_sayisi = db.Column(db.Integer, default=0)
+    aktif = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.TIMESTAMP, default=db.func.now())
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.name,
-            "location": self.location,
-            "capacity": self.capacity,
-            "area_m2": self.area_m2,
-            "description": self.description,
-            "geo_json": self.geo_json,
-            "type": self.type,
-            "height_m": self.height_m,
+            "ad": self.ad,
+            "konum": self.konum,
+            "alan_verisi_3d": self.alan_verisi_3d,
+            "aciklama": self.aciklama,
+            "tipi": self.tipi,
+            "kapasite": self.kapasite,
+            "yukseklik": float(self.yukseklik) if self.yukseklik is not None else None,
+            "taban_alani": float(self.taban_alani) if self.taban_alani is not None else None,
+            "raf_sayisi": self.raf_sayisi,
+            "aktif": self.aktif,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "user_id": self.user_id
         }
